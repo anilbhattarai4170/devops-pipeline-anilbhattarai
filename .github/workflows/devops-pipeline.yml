@@ -27,9 +27,26 @@ jobs:
         run: docker push ${{ secrets.DOCKER_USERNAME }}/anilbhattarai_app:latest
 
 
-  deploy:
+  security_scan:
     runs-on: ubuntu-latest
     needs: docker_build
+
+    steps:
+      - name: Install Snyk
+        run: npm install -g snyk
+
+      - name: Authenticate Snyk
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk auth $SNYK_TOKEN
+
+      - name: Run Snyk Docker Scan
+        run: snyk container test ${{ secrets.DOCKER_USERNAME }}/anilbhattarai_app:latest
+
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: security_scan
 
     steps:
       - name: Deploy to AWS EC2
